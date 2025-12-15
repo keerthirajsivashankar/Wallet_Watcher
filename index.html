@@ -6,222 +6,124 @@
     <title>Wallet Watcher Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css" />
+    <link rel="shortcut icon" href="./asserts/logo.ico" type="image/x-icon" />
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
   </head>
-  <body
-    class="bg-gray-900 text-gray-100 font-sans h-screen flex overflow-hidden"
-  >
-    <aside
-      class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col justify-between hidden md:flex"
+  <body class="h-[100dvh] w-screen flex flex-col overflow-hidden text-black">
+    <header
+      class="w-full h-20 flex items-center justify-center justify-between px-6"
     >
-      <div class="p-6">
-        <h1
-          class="text-2xl font-bold text-purple-500 tracking-wider flex items-center gap-2"
-        >
-          <i class="ph ph-wallet"></i> Wallet<span class="text-white"
-            >Watcher</span
-          >
-        </h1>
+      <div class="flex items-center justify-center p-4">
+        <img src="/asserts/logo.png" alt="logo" class="w-8 h-8" />
       </div>
+      <h1 id="tabName" class="font-medium">Home</h1>
 
-      <nav class="flex-1 px-4 space-y-2 mt-4">
-        <a
-          href="#"
-          class="nav-item flex items-center gap-3 px-4 py-3 bg-purple-600 text-white rounded-lg shadow-lg"
-        >
-          <i class="ph ph-squares-four text-xl"></i>
-          <span class="font-medium">Dashboard</span>
-        </a>
-
-        <a
-          href="#"
-          class="nav-item flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-gray-700 hover:text-white rounded-lg transition"
-        >
-          <i class="ph ph-chart-line-up text-xl"></i>
-          <span class="font-medium">Analytics</span>
-        </a>
-        <a
-          href="#"
-          class="nav-item flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-gray-700 hover:text-white rounded-lg transition"
-        >
-          <i class="ph ph-list-dashes text-xl"></i>
-          <span class="font-medium">Transactions</span>
-        </a>
-        <a
-          href="#"
-          class="nav-item flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-gray-700 hover:text-white rounded-lg transition"
-        >
-          <i class="ph ph-gear text-xl"></i>
-          <span class="font-medium">Settings</span>
-        </a>
-      </nav>
-
-      <div class="p-4 border-t border-gray-700">
-        <button
-          class="flex items-center gap-3 w-full p-2 hover:bg-gray-700 rounded-lg transition"
-        >
-          <i class="ph ph-sign-out text-xl text-red-400"></i>
-          <span class="text-sm font-medium text-gray-400 group-hover:text-white"
-            >Logout</span
-          >
-        </button>
-      </div>
-    </aside>
-
-    <div class="flex-1 flex flex-col h-screen relative">
-      <header
-        class="h-16 bg-gray-800/50 backdrop-blur-md border-b border-gray-700 flex items-center justify-between px-6 sticky top-0 z-10"
+      <button
+        class="bg-white border-2 border-gray-200 text-gray-600 hover:text-purple-600 w-10 h-10 hover:border-purple-600 hover:shadow-md p-2 rounded-lg transition-all duration-300 flex items-center justify-center relative group"
       >
-        <h2 id="page-title" class="text-xl font-bold text-white tracking-wide">
-          Dashboard
-        </h2>
+        <i class="ph ph-bell text-xl"></i>
 
-        <div class="flex items-center gap-4">
-          <button
-            class="relative p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-gray-700"
-          >
-            <i class="ph ph-bell text-2xl"></i>
-            <span
-              class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-gray-800"
-            ></span>
-          </button>
+        <span
+          class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white transform scale-0 group-hover:scale-100 transition-transform duration-300"
+        ></span>
+      </button>
+    </header>
+    <div
+      class="flex-1 flex flex-col-reverse md:flex-row overflow-hidden relative"
+    >
+      <aside
+        class="relative bottom-0 left-0 w-full h-24 md:h-full md:w-24 z-50 flex flex-row md:flex-col items-center justify-around md:justify-start md:py-6 md:gap-8 z-50"
+      >
+        <button
+          id="btn-home"
+          class="nav-btn flex flex-col items-center gap-1 text-orange-500 group"
+          onclick="switchTab('home')"
+        >
+          <i
+            class="ph ph-house text-2xl group-hover:scale-110 transition-transform"
+          ></i>
+          <span class="text-[10px] font-medium">Home</span>
+        </button>
 
-          <div class="h-6 w-px bg-gray-700"></div>
+        <button
+          id="btn-calender"
+          class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-orange-300 transition-colors group"
+          onclick="switchTab('calender')"
+        >
+          <i
+            class="ph ph-calendar-blank text-2xl group-hover:scale-110 transition-transform"
+          ></i>
+          <span class="text-[10px] font-medium">Calendar</span>
+        </button>
 
-          <div class="flex items-center gap-3 cursor-pointer">
-            <img
-              src="https://i.pravatar.cc/150?img=2"
-              alt="Profile"
-              class="w-9 h-9 rounded-full border-2 border-purple-500 shadow-sm hover:scale-105 transition"
+        <button
+          class="relative -top-6 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-4 shadow-xl border-4 border-gray-100 hover:scale-105 transition-transform flex items-center justify-center"
+          onclick="switchTab('add')"
+        >
+          <i class="ph ph-plus text-3xl font-bold"></i>
+        </button>
+
+        <button
+          id="btn-expenses"
+          class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-orange-300 transition-colors group"
+          onclick="switchTab('expenses')"
+        >
+          <i
+            class="ph ph-chart-pie-slice text-2xl group-hover:scale-110 transition-transform"
+          ></i>
+          <span class="text-[10px] font-medium">Expenses</span>
+        </button>
+
+        <button
+          id="btn-profile"
+          class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-orange-300 transition-colors group"
+          onclick="switchTab('profile')"
+        >
+          <i
+            class="ph ph-user text-2xl group-hover:scale-110 transition-transform"
+          ></i>
+          <span class="text-[10px] font-medium">Profile</span>
+        </button>
+      </aside>
+      <main class="flex-1 p-8 overflow-y-auto pb-24 md:pb-8">
+        <!-- home tab contents -->
+        <div id="tab-home" class="tab-content h-full">
+          <h2 class="text-2xl font-semibold mb-4">Welcome to Wallet Watcher</h2>
+          <p>Your personal finance management platform.</p>
+          <div class="mb-4">
+            <label class="block text-sm text-gray-400 mb-1">Date</label>
+            <input
+              type="date"
+              id="date"
+              class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none transition"
             />
           </div>
+          <div class="bg-white p-4 rounded-xl shadow-lg mt-6">
+            <h3 class="font-bold text-gray-700 mb-4">Monthly Expenses</h3>
+            <div class="relative h-64 w-full">
+              <canvas id="expenseChart"></canvas>
+            </div>
+          </div>
         </div>
-      </header>
-
-      <main class="flex-1 overflow-y-auto p-6 bg-gray-900">
-        <div class="max-w-4xl mx-auto">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div
-              class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg"
-            >
-              <h4 class="text-gray-400 text-xs uppercase font-bold mb-2">
-                Total Balance
-              </h4>
-              <h1 id="balance" class="text-3xl font-bold text-white">$0.00</h1>
-            </div>
-            <div
-              class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg flex items-center justify-between"
-            >
-              <div>
-                <h4 class="text-gray-400 text-xs uppercase font-bold mb-2">
-                  Income
-                </h4>
-                <p id="money-plus" class="text-green-400 text-2xl font-bold">
-                  +$0.00
-                </p>
-              </div>
-              <div class="p-3 bg-green-400/10 rounded-full text-green-400">
-                <i class="ph ph-arrow-up-right text-xl"></i>
-              </div>
-            </div>
-            <div
-              class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg flex items-center justify-between"
-            >
-              <div>
-                <h4 class="text-gray-400 text-xs uppercase font-bold mb-2">
-                  Expense
-                </h4>
-                <p id="money-minus" class="text-red-400 text-2xl font-bold">
-                  -$0.00
-                </p>
-              </div>
-              <div class="p-3 bg-red-400/10 rounded-full text-red-400">
-                <i class="ph ph-arrow-down-right text-xl"></i>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div
-              class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg h-fit"
-            >
-              <h3 class="text-lg font-bold mb-4 border-b border-gray-700 pb-2">
-                Add New
-              </h3>
-              <form id="form">
-                <div class="mb-4">
-                  <label class="block text-sm text-gray-400 mb-1"
-                    >Description</label
-                  >
-                  <input
-                    type="text"
-                    id="text"
-                    class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none transition"
-                    placeholder="e.g. Salary, Groceries..."
-                  />
-                </div>
-                <div class="mb-6">
-                  <label class="block text-sm text-gray-400 mb-1">Amount</label>
-                  <input
-                    type="number"
-                    id="amount"
-                    class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none transition"
-                    placeholder="Enter amount..."
-                  />
-                  <span class="text-xs text-gray-500 mt-1 block"
-                    >Use negative (-) for expenses</span
-                  >
-                </div>
-                <button
-                  class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-lg flex justify-center items-center gap-2"
-                >
-                  <i class="ph ph-plus-circle text-lg"></i> Add Transaction
-                </button>
-              </form>
-            </div>
-
-            <div
-              class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg"
-            >
-              <div
-                class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2"
-              >
-                <h3 class="text-lg font-bold">Recent History</h3>
-              </div>
-              <ul
-                id="list"
-                class="list-none space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar"
-              ></ul>
-            </div>
-          </div>
+        <!-- calender tab contents -->
+        <div id="tab-calender" class="tab-content hidden">
+          <h2>tab-calender</h2>
+        </div>
+        <!--add tab content-->
+        <div id="tab-add" class="tab-content hidden">
+          <h2>add tab</h2>
+        </div>
+        <!-- expenses tab contents -->
+        <div id="tab-expenses" class="tab-content hidden">
+          <h2>tab-expenses</h2>
+        </div>
+        <!-- profile tab contents -->
+        <div id="tab-profile" class="tab-content hidden">
+          <h2>tab-profile</h2>
         </div>
       </main>
     </div>
-
     <script src="script.js"></script>
-    <script>
-      const navItems = document.querySelectorAll(".nav-item");
-      const pageTitle = document.getElementById("page-title");
-
-      navItems.forEach((item) => {
-        item.addEventListener("click", (e) => {
-          // Remove active classes from all
-          navItems.forEach((nav) => {
-            nav.classList.remove("bg-purple-600", "text-white", "shadow-lg");
-            nav.classList.add("text-gray-400", "hover:bg-gray-700");
-          });
-
-          // Add active class to clicked
-          // Note: e.currentTarget ensures we grab the A tag even if icon is clicked
-          const clicked = e.currentTarget;
-          clicked.classList.remove("text-gray-400", "hover:bg-gray-700");
-          clicked.classList.add("bg-purple-600", "text-white", "shadow-lg");
-
-          // Update Header Title
-          const text = clicked.querySelector("span").innerText;
-          pageTitle.innerText = text;
-        });
-      });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </body>
 </html>

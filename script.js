@@ -1,129 +1,105 @@
+// INSIDE script.js
 console.log("Wallet Watcher script loaded.");
 
-// 1. GET THE HTML ELEMENTS
-const balance = document.getElementById("balance");
-const money_plus = document.getElementById("money-plus");
-const money_minus = document.getElementById("money-minus");
-const list = document.getElementById("list");
-const form = document.getElementById("form");
-const text = document.getElementById("text");
-const amount = document.getElementById("amount");
+function switchTab(tabName) {
+  // 1. Hide all tab contents
+  document.querySelectorAll(".tab-content").forEach((content) => {
+    content.classList.add("hidden");
+  });
 
-// 2. RETRIEVE DATA FROM LOCAL STORAGE
-// We check if there is data. If yes, parse it. If no, start with empty array [].
-const localStorageTransactions = JSON.parse(
-  localStorage.getItem("transactions")
-);
-
-let transactions =
-  localStorage.getItem("transactions") !== null ? localStorageTransactions : [];
-
-// 3. FUNCTION: ADD TRANSACTION
-function addTransaction(e) {
-  e.preventDefault(); // Stops the form from submitting/refreshing the page
-
-  if (text.value.trim() === "" || amount.value.trim() === "") {
-    alert("Please add a text and amount");
-  } else {
-    const transaction = {
-      id: generateID(),
-      text: text.value,
-      amount: +amount.value, // The '+' converts the string "20" to number 20
-    };
-
-    transactions.push(transaction); // Add to our data array
-
-    addTransactionDOM(transaction); // Add to the HTML list
-    updateValues(); // Recalculate balance
-    updateLocalStorage(); // Save to browser memory
-
-    // Clear inputs
-    text.value = "";
-    amount.value = "";
+  // 2. Show the selected tab content
+  const selectedTab = document.getElementById("tab-" + tabName);
+  if (selectedTab) {
+    selectedTab.classList.remove("hidden");
   }
+
+  // 3. Reset all nav buttons to GRAY (Inactive)
+  // We use .nav-btn class now (instead of .tab-btn)
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.classList.remove("text-orange-500"); // Remove active orange
+    btn.classList.add("text-gray-400"); // Add inactive gray
+  });
+
+  // 4. Highlight the active button to ORANGE
+  // (We skip this if the user clicked the big "Add" button, as it has no ID/text color to change)
+  const activeBtn = document.getElementById("btn-" + tabName);
+  if (activeBtn) {
+    activeBtn.classList.remove("text-gray-400");
+    activeBtn.classList.add("text-orange-500");
+  }
+
+  // 5. Update Header Title
+  // Capitalize first letter: 'home' -> 'Home'
+  const title = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+  document.getElementById("tabName").innerText = title;
 }
 
-// 4. FUNCTION: GENERATE RANDOM ID
-function generateID() {
-  return Math.floor(Math.random() * 100000000);
+// Inside addTransaction(e) function...
+
+const transaction = {
+  id: generateID(),
+  text: text.value,
+  amount: +amount.value,
+  date: document.getElementById("date").value, // <--- NEW: Save the date!
+};
+
+let myChart; // Global variable to hold the chart instance
+
+function renderChart() {
+  const ctx = document.getElementById("expenseChart");
+
+  // 1. Prepare Data Buckets
+  // We want an object like: { "2023-10": 500, "2023-11": 1200 }
+  const monthlyTotals = {};
+
+  transactions.forEach((txn) => {
+    // Only look at Expenses (negative numbers)
+    if (txn.amount < 0 && txn.date) {
+      // Extract "YYYY-MM" from date string "2025-12-15"
+      const monthKey = txn.date.substring(0, 7);
+
+      if (!monthlyTotals[monthKey]) {
+        monthlyTotals[monthKey] = 0;
+      }
+      // Add absolute value (convert -20 to 20)
+      monthlyTotals[monthKey] += Math.abs(txn.amount);
+    }
+  });
+
+  // 2. Sort the Labels (so Jan comes before Feb)
+  const sortedMonths = Object.keys(monthlyTotals).sort();
+  const dataValues = sortedMonths.map((month) => monthlyTotals[month]);
+
+  // 3. Destroy old chart if it exists (prevents glitching when you update data)
+  if (myChart) {
+    myChart.destroy();
+  }
+
+  // 4. Create New Chart
+  myChart = new Chart(ctx, {
+    type: "bar", // Can be 'line', 'bar', 'doughnut'
+    data: {
+      labels: sortedMonths, // ["2025-10", "2025-11"]
+      datasets: [
+        {
+          label: "Expenses",
+          data: dataValues, // [500, 1200]
+          backgroundColor: "#f97316", // Orange-500
+          borderRadius: 5,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  });
 }
 
-// 5. FUNCTION: SHOW TRANSACTION IN HTML LIST
-function addTransactionDOM(transaction) {
-  // Get sign (is it + or -?)
-  const sign = transaction.amount < 0 ? "-" : "+";
-
-  // Create list item
-  const item = document.createElement("li");
-
-  // Add class based on value (Red for minus, Green for plus)
-  // We use Tailwind classes here: border-r-4 border-red-500 etc
-  item.classList.add(
-    "bg-gray-700",
-    "flex",
-    "justify-between",
-    "p-2",
-    "rounded-md",
-    "shadow-sm",
-    "border-r-4",
-    transaction.amount < 0 ? "border-red-500" : "border-green-500"
-  );
-
-  item.innerHTML = `
-    ${transaction.text} <span>${sign}${Math.abs(transaction.amount)}</span>
-    <button class="delete-btn text-red-400 font-bold ml-2 hover:text-red-600" onclick="removeTransaction(${
-      transaction.id
-    })">x</button>
-  `;
-
-  list.appendChild(item);
-}
-
-// 6. FUNCTION: UPDATE BALANCE, INCOME, EXPENSE
-function updateValues() {
-  const amounts = transactions.map((transaction) => transaction.amount);
-
-  // Calculate Total
-  const total = amounts.reduce((acc, item) => (acc += item), 0).toFixed(2);
-
-  // Calculate Income (only positives)
-  const income = amounts
-    .filter((item) => item > 0)
-    .reduce((acc, item) => (acc += item), 0)
-    .toFixed(2);
-
-  // Calculate Expense (only negatives)
-  const expense = (
-    amounts.filter((item) => item < 0).reduce((acc, item) => (acc += item), 0) *
-    -1
-  ).toFixed(2);
-
-  // Update HTML
-  balance.innerText = `$${total}`;
-  money_plus.innerText = `+$${income}`;
-  money_minus.innerText = `-$${expense}`;
-}
-
-// 7. FUNCTION: REMOVE TRANSACTION (Optional Feature)
-function removeTransaction(id) {
-  transactions = transactions.filter((transaction) => transaction.id !== id);
-  updateLocalStorage();
-  init();
-}
-
-// 8. FUNCTION: UPDATE LOCAL STORAGE
-function updateLocalStorage() {
-  localStorage.setItem("transactions", JSON.stringify(transactions));
-}
-
-// 9. INIT APP
-function init() {
-  list.innerHTML = ""; // Clear list
-  transactions.forEach(addTransactionDOM); // Add items from history
-  updateValues(); // Calculate totals
-}
-
-init();
-
-// EVENT LISTENERS
-form.addEventListener("submit", addTransaction);
+// IMPORTANT: Add renderChart() to your init() and addTransaction() functions
+// so it updates whenever you load the page or add an item.
