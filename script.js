@@ -1,105 +1,225 @@
-// INSIDE script.js
 console.log("Wallet Watcher script loaded.");
 
+// --- 1. STATE MANAGEMENT ---
+// Load transactions from storage or start empty
+const localStorageTransactions = JSON.parse(
+  localStorage.getItem("transactions")
+);
+let transactions =
+  localStorage.getItem("transactions") !== null ? localStorageTransactions : [];
+
+// --- 2. DOM ELEMENTS ---
+const balance = document.getElementById("balance");
+const money_plus = document.getElementById("money-plus");
+const money_minus = document.getElementById("money-minus");
+const list = document.getElementById("list");
+const form = document.getElementById("form");
+
+// --- 3. TAB LOGIC ---
 function switchTab(tabName) {
-  // 1. Hide all tab contents
+  // Hide all contents
   document.querySelectorAll(".tab-content").forEach((content) => {
     content.classList.add("hidden");
   });
 
-  // 2. Show the selected tab content
+  // Show selected content
   const selectedTab = document.getElementById("tab-" + tabName);
   if (selectedTab) {
     selectedTab.classList.remove("hidden");
   }
 
-  // 3. Reset all nav buttons to GRAY (Inactive)
-  // We use .nav-btn class now (instead of .tab-btn)
+  // Update Buttons (Gray vs Orange)
   document.querySelectorAll(".nav-btn").forEach((btn) => {
-    btn.classList.remove("text-orange-500"); // Remove active orange
-    btn.classList.add("text-gray-400"); // Add inactive gray
+    btn.classList.remove("text-orange-500");
+    btn.classList.add("text-gray-400");
   });
 
-  // 4. Highlight the active button to ORANGE
-  // (We skip this if the user clicked the big "Add" button, as it has no ID/text color to change)
   const activeBtn = document.getElementById("btn-" + tabName);
   if (activeBtn) {
     activeBtn.classList.remove("text-gray-400");
     activeBtn.classList.add("text-orange-500");
   }
 
-  // 5. Update Header Title
-  // Capitalize first letter: 'home' -> 'Home'
+  // Update Header Title
   const title = tabName.charAt(0).toUpperCase() + tabName.slice(1);
-  document.getElementById("tabName").innerText = title;
+  const titleEl = document.getElementById("tabName");
+  if (titleEl) titleEl.innerText = title;
+
+  // If going to Home, refresh the data display
+  if (tabName === "home") {
+    init();
+  }
 }
 
-// Inside addTransaction(e) function...
+// --- 4. TOGGLE SWITCH LOGIC (Expense/Income) ---
+function setType(type) {
+  const bg = document.getElementById("toggle-bg");
+  const btnExpense = document.getElementById("btn-type-expense");
+  const btnIncome = document.getElementById("btn-type-income");
+  const hiddenInput = document.getElementById("trans-type");
+  const submitBtn = document.getElementById("submit-btn");
 
-const transaction = {
-  id: generateID(),
-  text: text.value,
-  amount: +amount.value,
-  date: document.getElementById("date").value, // <--- NEW: Save the date!
-};
+  hiddenInput.value = type;
 
-let myChart; // Global variable to hold the chart instance
+  if (type === "expense") {
+    bg.style.transform = "translateX(0%)";
+    bg.style.backgroundColor = "#fb7044";
 
-function renderChart() {
-  const ctx = document.getElementById("expenseChart");
+    btnExpense.classList.add("text-white");
+    btnExpense.classList.remove("text-gray-500");
+    btnIncome.classList.add("text-gray-500");
+    btnIncome.classList.remove("text-white");
 
-  // 1. Prepare Data Buckets
-  // We want an object like: { "2023-10": 500, "2023-11": 1200 }
-  const monthlyTotals = {};
+    submitBtn.style.backgroundColor = "#fb7044";
+    submitBtn.classList.add("shadow-orange-200");
+    submitBtn.classList.remove("shadow-purple-200");
+  } else {
+    bg.style.transform = "translateX(100%)";
+    bg.style.backgroundColor = "#8d46f1";
 
-  transactions.forEach((txn) => {
-    // Only look at Expenses (negative numbers)
-    if (txn.amount < 0 && txn.date) {
-      // Extract "YYYY-MM" from date string "2025-12-15"
-      const monthKey = txn.date.substring(0, 7);
+    btnIncome.classList.add("text-white");
+    btnIncome.classList.remove("text-gray-500");
+    btnExpense.classList.add("text-gray-500");
+    btnExpense.classList.remove("text-white");
 
-      if (!monthlyTotals[monthKey]) {
-        monthlyTotals[monthKey] = 0;
-      }
-      // Add absolute value (convert -20 to 20)
-      monthlyTotals[monthKey] += Math.abs(txn.amount);
-    }
-  });
+    submitBtn.style.backgroundColor = "#8d46f1";
+    submitBtn.classList.add("shadow-purple-200");
+    submitBtn.classList.remove("shadow-orange-200");
+  }
+}
 
-  // 2. Sort the Labels (so Jan comes before Feb)
-  const sortedMonths = Object.keys(monthlyTotals).sort();
-  const dataValues = sortedMonths.map((month) => monthlyTotals[month]);
+// --- 5. ADD TRANSACTION LOGIC ---
+function addTransaction(e) {
+  e.preventDefault();
 
-  // 3. Destroy old chart if it exists (prevents glitching when you update data)
-  if (myChart) {
-    myChart.destroy();
+  const text = document.getElementById("text");
+  const amount = document.getElementById("amount");
+  const date = document.getElementById("date");
+  const category = document.getElementById("category");
+  const type = document.getElementById("trans-type").value;
+
+  if (text.value.trim() === "" || amount.value.trim() === "") {
+    alert("Please add a description and amount");
+    return;
   }
 
-  // 4. Create New Chart
-  myChart = new Chart(ctx, {
-    type: "bar", // Can be 'line', 'bar', 'doughnut'
-    data: {
-      labels: sortedMonths, // ["2025-10", "2025-11"]
-      datasets: [
-        {
-          label: "Expenses",
-          data: dataValues, // [500, 1200]
-          backgroundColor: "#f97316", // Orange-500
-          borderRadius: 5,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-        },
-      },
-    },
-  });
+  const rawAmount = +amount.value;
+  // If expense, make negative. If income, make positive.
+  const finalAmount =
+    type === "expense" ? -Math.abs(rawAmount) : Math.abs(rawAmount);
+
+  const transaction = {
+    id: generateID(),
+    text: text.value,
+    amount: finalAmount,
+    date: date.value,
+    category: category.value,
+    type: type,
+  };
+
+  transactions.push(transaction);
+
+  updateLocalStorage();
+
+  // Clear inputs
+  text.value = "";
+  amount.value = "";
+
+  // UX: Switch back to home to see the result
+  switchTab("home");
 }
 
-// IMPORTANT: Add renderChart() to your init() and addTransaction() functions
-// so it updates whenever you load the page or add an item.
+// Generate random ID
+function generateID() {
+  return Math.floor(Math.random() * 100000000);
+}
+
+// --- 6. DISPLAY & CALCULATE LOGIC ---
+
+function updateValues() {
+  const amounts = transactions.map((transaction) => transaction.amount);
+
+  const total = amounts.reduce((acc, item) => (acc += item), 0).toFixed(2);
+
+  const income = amounts
+    .filter((item) => item > 0)
+    .reduce((acc, item) => (acc += item), 0)
+    .toFixed(2);
+
+  const expense = (
+    amounts.filter((item) => item < 0).reduce((acc, item) => (acc += item), 0) *
+    -1
+  ).toFixed(2);
+
+  if (balance) balance.innerText = `₹${total}`;
+  if (money_plus) money_plus.innerText = `+₹${income}`;
+  if (money_minus) money_minus.innerText = `-₹${expense}`;
+}
+
+function addTransactionDOM(transaction) {
+  if (!list) return; // Safety check
+
+  const sign = transaction.amount < 0 ? "-" : "+";
+  const item = document.createElement("li");
+
+  // Styling based on Income/Expense
+  const borderClass =
+    transaction.amount < 0 ? "border-orange-500" : "border-purple-500";
+  const textClass =
+    transaction.amount < 0 ? "text-orange-500" : "text-purple-500";
+  const icon =
+    transaction.amount < 0 ? "ph-arrow-down-right" : "ph-arrow-up-right";
+
+  item.className = `bg-white p-4 rounded-xl shadow-sm border-l-4 ${borderClass} flex justify-between items-center`;
+
+  item.innerHTML = `
+        <div class="flex flex-col">
+            <span class="font-bold text-gray-800">${transaction.text}</span>
+            <span class="text-xs text-gray-400 capitalize">${
+              transaction.category || "General"
+            } • ${transaction.date || "No Date"}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="font-bold ${textClass}">${sign}₹${Math.abs(
+    transaction.amount
+  )}</span>
+            <button onclick="removeTransaction(${
+              transaction.id
+            })" class="text-gray-300 hover:text-red-500 transition-colors">
+                <i class="ph ph-trash"></i>
+            </button>
+        </div>
+    `;
+
+  list.appendChild(item);
+}
+
+function removeTransaction(id) {
+  transactions = transactions.filter((transaction) => transaction.id !== id);
+  updateLocalStorage();
+  init();
+}
+
+function updateLocalStorage() {
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+}
+
+function init() {
+  if (list) list.innerHTML = "";
+  transactions.forEach(addTransactionDOM);
+  updateValues();
+}
+
+// --- 7. EVENT LISTENERS ---
+document.addEventListener("DOMContentLoaded", () => {
+  // Set default date
+  const dateInput = document.getElementById("date");
+  if (dateInput) dateInput.valueAsDate = new Date();
+
+  // Initialize App
+  init();
+});
+
+if (form) {
+  form.addEventListener("submit", addTransaction);
+}
